@@ -36,7 +36,7 @@ app.get("/possession", (req, res) => {
 app.post("/possessions", (req, res) => {
     const newPossession = req.body;
 
-    
+
     if (!newPossession.libelle || !newPossession.valeur || !newPossession.dateDebut) {
         return res.status(400).json({ error: "Missing required fields" });
     }
@@ -48,7 +48,7 @@ app.post("/possessions", (req, res) => {
     if (patrimoine) {
         // Ajouter la nouvelle possession
         patrimoine.data.possessions.push(newPossession);
-        
+
         // Écrire les données mises à jour dans le fichier
         writeDataToFile(data);
 
@@ -58,7 +58,37 @@ app.post("/possessions", (req, res) => {
     }
 });
 
+app.put("/possession/:libelle", (req, res) => {
+    const { libelle } = req.params;
+    const { dateFin } = req.body;
 
+    if (!dateFin) {
+        return res.status(400).json({ error: "Missing required field: dateFin" });
+    }
+
+    // Lecture des données existantes depuis le fichier
+    const data = readDataFromFile();
+    const patrimoine = data.find((item) => item.model === "Patrimoine");
+
+    if (patrimoine) {
+        // Trouver la possession correspondant au libelle
+        const possession = patrimoine.data.possessions.find((pos) => pos.libelle === libelle);
+
+        if (possession) {
+            // Mise à jour de la date de fin de la possession trouvée
+            possession.dateFin = dateFin;
+
+            // Écrire les données mises à jour dans le fichier
+            writeDataToFile(data);
+
+            res.status(200).json(possession);  // Retourner la possession mise à jour
+        } else {
+            res.status(404).json({ error: "Possession not found" });  // Erreur 404 si la possession n'est pas trouvée
+        }
+    } else {
+        res.status(404).json({ error: "Patrimony not found" });  // Erreur si le modèle 'Patrimoine' n'est pas trouvé
+    }
+});
 
 const PORT = 5000;
 app.listen(PORT, () => {
