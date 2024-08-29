@@ -1,4 +1,4 @@
-import { Card, Container, Row, Col } from "react-bootstrap";
+import { Card, Container, Row, Col , Button} from "react-bootstrap";
 import data from "../data/data.json";
 import { useEffect, useState } from "react";
 import CustomizedDatePicker from "./DatePicker";
@@ -23,6 +23,31 @@ const PossessionTable = () => {
     fetchPossessions();
   }, []);
 
+  const handleClosePossession = async (libelle) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/possession/${libelle}/close`,
+        {
+          method: "PUT",
+        }
+      );
+
+      if (response.ok) {
+        // Mise à jour de la liste des possessions après fermeture
+        setPossessions((prevPossessions) =>
+          prevPossessions.map((possession) =>
+            possession.libelle === libelle
+              ? { ...possession, dateFin: new Date().toISOString() }
+              : possession
+          )
+        );
+      } else {
+        console.error("Error closing possession");
+      }
+    } catch (error) {
+      console.error("Error with close request: ", error);
+    }
+  }
   return (
     <Container className="mt-4">
       <Row>
@@ -50,6 +75,13 @@ const PossessionTable = () => {
                   <strong>Taux d'amortissement :</strong>{" "}
                   {possession.tauxAmortissement || "N/A"}
                 </Card.Text>
+
+                <Button
+                  variant="secondary"
+                  onClick={() => handleClosePossession(possession.libelle)}
+                >
+                  Close
+                </Button>
               </Card.Body>
             </Card>
           </Col>
