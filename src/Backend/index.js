@@ -90,6 +90,37 @@ app.put("/possession/:libelle", (req, res) => {
     }
 });
 
+
+app.put("/possession/:libelle/close", (req, res) => {
+    const { libelle } = req.params;
+
+    // Lire les données actuelles
+    const data = readDataFromFile();
+    const patrimoine = data.find((item) => item.model === "Patrimoine");
+
+    if (patrimoine) {
+        // Trouver la possession correspondante par libelle
+        const possession = patrimoine.data.possessions.find(
+            (pos) => pos.libelle === libelle
+        );
+
+        if (possession) {
+            // Mettre à jour la date de fin avec la date actuelle
+            possession.dateFin = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
+
+            // Sauvegarder les modifications
+            writeDataToFile(data);
+
+            res.status(200).json({ message: "Possession closed", possession });
+        } else {
+            res.status(404).json({ error: "Possession not found" });
+        }
+    } else {
+        res.status(404).json({ error: "Patrimony not found" });
+    }
+});
+
+
 const PORT = 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
